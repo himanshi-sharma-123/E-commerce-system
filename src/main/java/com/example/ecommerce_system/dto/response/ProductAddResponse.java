@@ -3,7 +3,7 @@ package com.example.ecommerce_system.dto.response;
 import lombok.Data;
 
 @Data
-public class RegisterUserResponse extends BaseResponse{
+public class ProductAddResponse extends BaseResponse{
 
     private Integer id;
     private String message;
