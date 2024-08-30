@@ -1,6 +1,8 @@
 package com.example.ecommerce_system.controller;
 
+import com.example.ecommerce_system.dto.request.LoginUserRequest;
 import com.example.ecommerce_system.dto.request.RegisterUserRequest;
+import com.example.ecommerce_system.dto.response.LoginUserResponse;
 import com.example.ecommerce_system.dto.response.RegisterUserResponse;
 import com.example.ecommerce_system.entity.User;
 import com.example.ecommerce_system.enums.ResponseStatus;
@@ -41,6 +43,10 @@ public class UserController {
 
         }
         return response;
+    }
 
+    @PostMapping("/api/login")
+    public LoginUserResponse login(@RequestBody LoginUserRequest userRequest){
+        return userService.verify(userRequest);
     }
 }
