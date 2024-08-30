@@ -46,7 +46,7 @@ public class AdminController {
     }
 
     @PostMapping("/api/product/add")
-    public ProductAddResponse categoryAdd(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody ProductAddRequest productAddRequest){
+    public ProductAddResponse productAdd(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody ProductAddRequest productAddRequest){
         ProductAddResponse response = new ProductAddResponse();
 
         if(userPrincipal.getUserType() != UserType.ADMIN){
