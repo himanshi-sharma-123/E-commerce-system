@@ -1,5 +1,6 @@
 package com.example.ecommerce_system.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,5 +18,6 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "categoryId")
+    @JsonIgnore
     private Category category;
 }
