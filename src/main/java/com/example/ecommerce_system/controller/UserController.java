@@ -69,4 +69,9 @@ public class UserController {
     public List<Cart> getCart(){
         return userService.getCart();
     }
+
+    @GetMapping("/api/allUsers")
+    public List<User> getAllUsers(){
+        return userService.getAllUsers();
+    }
 }

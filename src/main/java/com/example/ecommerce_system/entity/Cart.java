@@ -1,5 +1,6 @@
 package com.example.ecommerce_system.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,6 +18,10 @@ public class Cart {
     @OneToOne
     private User user;
 
-    @OneToMany
-    private List<Product> products;
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<CartItem> cartItems;
+
+//    @OneToMany
+//    private List<Product> products;
 }

@@ -6,18 +6,20 @@ import lombok.Data;
 
 @Data
 @Entity
-public class Product {
+public class CartItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String productName;
-    private Integer stock;
-    private Integer price;
+    @ManyToOne
+    @JoinColumn(name = "cart_id")
+    @JsonIgnore
+    private Cart cart;
 
     @ManyToOne
-    @JoinColumn(name = "categoryId")
-    @JsonIgnore
-    private Category category;
+    @JoinColumn(name = "product_id")
+    private Product product;
+
+    private Integer quantity;
 }

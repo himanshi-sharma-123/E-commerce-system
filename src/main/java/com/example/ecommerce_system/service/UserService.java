@@ -6,9 +6,11 @@ import com.example.ecommerce_system.dto.request.RegisterUserRequest;
 import com.example.ecommerce_system.dto.response.CartAddResponse;
 import com.example.ecommerce_system.dto.response.LoginUserResponse;
 import com.example.ecommerce_system.entity.Cart;
+import com.example.ecommerce_system.entity.CartItem;
 import com.example.ecommerce_system.entity.Product;
 import com.example.ecommerce_system.entity.User;
 import com.example.ecommerce_system.enums.ResponseStatus;
+import com.example.ecommerce_system.repo.CartItemRepo;
 import com.example.ecommerce_system.repo.CartRepo;
 import com.example.ecommerce_system.repo.ProductRepo;
 import com.example.ecommerce_system.repo.UserRepo;
@@ -37,6 +39,9 @@ public class UserService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private CartItemRepo cartItemRepo;
 
     @Autowired
     AuthenticationManager authManager;
@@ -79,60 +84,127 @@ public class UserService {
         return response;
     }
 
+//    public CartAddResponse addToCart(String username, CartAddRequest cartAddRequest) {
+//        CartAddResponse response = new CartAddResponse();
+//
+//        try{
+//
+//            Product product = productRepo.findById(cartAddRequest.getProductId())
+//                    .orElseThrow(() -> new RuntimeException("Product not found"));
+//
+//            if (product.getStock() <= 0) {
+//                response.setMessage("Product is not available");
+//                return response;
+//            }
+//
+//            User user = userRepo.findByUsername(username);
+//
+//            product.setStock(product.getStock() - 1);
+//            productRepo.save(product);
+//
+//            Optional<Cart> cart = cartRepo.findById(cartAddRequest.getCartId());
+//            Cart cartHistory;
+//
+//            if(cart.isPresent()){
+//                cartHistory = cart.get();
+//            }
+//            else {
+//                cartHistory = new Cart();
+//            }
+//
+//            cartHistory.setUser(user);
+//            List<Product> products = cartHistory.getProducts();
+//
+//            if(products == null){
+//                products = new ArrayList<>();
+//            }
+//            products.add(product);
+//
+//            cartHistory.setProducts(products);
+//
+//            response.setId(cartAddRequest.getCartId());
+//            response.setResponseStatus(ResponseStatus.SUCCESS);
+//            response.setMessage("Product added to the cart successfully");
+//
+//            cartRepo.save(cartHistory);
+//
+//        }catch (Exception e){
+//            e.printStackTrace();
+//            response.setMessage(e.getMessage());
+//        }
+//
+//        return response;
+//
+//    }
+
     public CartAddResponse addToCart(String username, CartAddRequest cartAddRequest) {
         CartAddResponse response = new CartAddResponse();
 
-        try{
-
+        try {
+            // Find the product by ID
             Product product = productRepo.findById(cartAddRequest.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
+            // Check if the product has enough stock
             if (product.getStock() <= 0) {
                 response.setMessage("Product is not available");
+                response.setResponseStatus(ResponseStatus.FAILED);
                 return response;
             }
 
+            // Find the user by username
             User user = userRepo.findByUsername(username);
 
+            // Check if the user already has a cart
+            Cart cart = cartRepo.findByUser(user);
+
+            if (cart == null) {
+                // Create a new cart if the user doesn't already have one
+                cart = new Cart();
+                cart.setUser(user);
+                cart = cartRepo.save(cart); // Save the cart to generate an ID
+            }
+
+            // Find or create CartItem
+            CartItem existingCartItem = cartItemRepo.findByCartAndProduct(cart, product);
+
+            if (existingCartItem != null) {
+                // Update quantity if the item already exists in the cart
+                existingCartItem.setQuantity(existingCartItem.getQuantity() + 1);
+                cartItemRepo.save(existingCartItem);
+            } else {
+                // Create a new CartItem
+                CartItem newCartItem = new CartItem();
+                newCartItem.setCart(cart);
+                newCartItem.setProduct(product);
+                newCartItem.setQuantity(1);
+                cartItemRepo.save(newCartItem);
+            }
+
+            // Decrease product stock and save
             product.setStock(product.getStock() - 1);
             productRepo.save(product);
 
-            Optional<Cart> cart = cartRepo.findById(cartAddRequest.getCartId());
-            Cart cartHistory;
-
-            if(cart.isPresent()){
-                cartHistory = cart.get();
-            }
-            else {
-                cartHistory = new Cart();
-            }
-
-            cartHistory.setUser(user);
-            List<Product> products = cartHistory.getProducts();
-
-            if(products == null){
-                products = new ArrayList<>();
-            }
-            products.add(product);
-
-            cartHistory.setProducts(products);
-
-            response.setId(cartAddRequest.getCartId());
+            response.setId(cart.getId());
             response.setResponseStatus(ResponseStatus.SUCCESS);
             response.setMessage("Product added to the cart successfully");
 
-            cartRepo.save(cartHistory);
-
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.setMessage(e.getMessage());
+            response.setResponseStatus(ResponseStatus.FAILED);
         }
 
         return response;
-
     }
+
+
 
     public List<Cart> getCart() {
         return cartRepo.findAll();
+    }
+
+    public List<User> getAllUsers() {
+        return userRepo.findAll();
     }
 }

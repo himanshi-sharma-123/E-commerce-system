@@ -1,6 +1,7 @@
 package com.example.ecommerce_system.entity;
 
 import com.example.ecommerce_system.enums.UserType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,4 +19,8 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private UserType userType;
+
+    @OneToOne(mappedBy = "user")
+    @JsonIgnore // Prevents infinite loop with Cart -> User -> Cart
+    private Cart cart;
 }
