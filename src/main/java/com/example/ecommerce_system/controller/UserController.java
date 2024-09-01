@@ -4,10 +4,7 @@ import com.example.ecommerce_system.dto.request.CartAddRequest;
 import com.example.ecommerce_system.dto.request.LoginUserRequest;
 import com.example.ecommerce_system.dto.request.BuyRequest;
 import com.example.ecommerce_system.dto.request.RegisterUserRequest;
-import com.example.ecommerce_system.dto.response.CartAddResponse;
-import com.example.ecommerce_system.dto.response.LoginUserResponse;
-import com.example.ecommerce_system.dto.response.BuyResponse;
-import com.example.ecommerce_system.dto.response.RegisterUserResponse;
+import com.example.ecommerce_system.dto.response.*;
 import com.example.ecommerce_system.entity.Cart;
 import com.example.ecommerce_system.entity.User;
 import com.example.ecommerce_system.enums.ResponseStatus;
@@ -81,5 +78,11 @@ public class UserController {
     public BuyResponse buyProduct(Authentication authentication, @RequestBody BuyRequest orderRequest){
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return userService.buyProduct(userDetails.getUsername(),orderRequest);
+    }
+
+    @GetMapping("/api/orders")
+    public List<OrderResponse> getUserOrders(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return userService.getOrdersForUser(userDetails.getUsername());
     }
 }

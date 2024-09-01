@@ -7,6 +7,7 @@ import com.example.ecommerce_system.dto.request.RegisterUserRequest;
 import com.example.ecommerce_system.dto.response.CartAddResponse;
 import com.example.ecommerce_system.dto.response.LoginUserResponse;
 import com.example.ecommerce_system.dto.response.BuyResponse;
+import com.example.ecommerce_system.dto.response.OrderResponse;
 import com.example.ecommerce_system.entity.*;
 import com.example.ecommerce_system.enums.ResponseStatus;
 import com.example.ecommerce_system.repo.*;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -265,4 +267,20 @@ public class UserService {
     }
 
 
+    public List<OrderResponse> getOrdersForUser(String username) {
+        List<Buy> orders = orderRepo.findByUserUsername(username);
+
+        // Convert entities to DTOs
+        return orders.stream()
+                .map(order -> {
+                    OrderResponse response = new OrderResponse();
+                    response.setOrderId(order.getId());
+                    response.setAmount(order.getAmount());
+                    response.setProducts(order.getCart().getCartItems().stream()
+                            .map(CartItem::getProduct)
+                            .collect(Collectors.toList()));
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
 }
