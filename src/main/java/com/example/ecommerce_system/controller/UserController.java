@@ -2,9 +2,11 @@ package com.example.ecommerce_system.controller;
 
 import com.example.ecommerce_system.dto.request.CartAddRequest;
 import com.example.ecommerce_system.dto.request.LoginUserRequest;
+import com.example.ecommerce_system.dto.request.BuyRequest;
 import com.example.ecommerce_system.dto.request.RegisterUserRequest;
 import com.example.ecommerce_system.dto.response.CartAddResponse;
 import com.example.ecommerce_system.dto.response.LoginUserResponse;
+import com.example.ecommerce_system.dto.response.BuyResponse;
 import com.example.ecommerce_system.dto.response.RegisterUserResponse;
 import com.example.ecommerce_system.entity.Cart;
 import com.example.ecommerce_system.entity.User;
@@ -73,5 +75,11 @@ public class UserController {
     @GetMapping("/api/allUsers")
     public List<User> getAllUsers(){
         return userService.getAllUsers();
+    }
+
+    @PostMapping("/api/cart/buy")
+    public BuyResponse buyProduct(Authentication authentication, @RequestBody BuyRequest orderRequest){
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return userService.buyProduct(userDetails.getUsername(),orderRequest);
     }
 }

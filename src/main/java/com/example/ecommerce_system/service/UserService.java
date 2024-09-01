@@ -2,18 +2,14 @@ package com.example.ecommerce_system.service;
 
 import com.example.ecommerce_system.dto.request.CartAddRequest;
 import com.example.ecommerce_system.dto.request.LoginUserRequest;
+import com.example.ecommerce_system.dto.request.BuyRequest;
 import com.example.ecommerce_system.dto.request.RegisterUserRequest;
 import com.example.ecommerce_system.dto.response.CartAddResponse;
 import com.example.ecommerce_system.dto.response.LoginUserResponse;
-import com.example.ecommerce_system.entity.Cart;
-import com.example.ecommerce_system.entity.CartItem;
-import com.example.ecommerce_system.entity.Product;
-import com.example.ecommerce_system.entity.User;
+import com.example.ecommerce_system.dto.response.BuyResponse;
+import com.example.ecommerce_system.entity.*;
 import com.example.ecommerce_system.enums.ResponseStatus;
-import com.example.ecommerce_system.repo.CartItemRepo;
-import com.example.ecommerce_system.repo.CartRepo;
-import com.example.ecommerce_system.repo.ProductRepo;
-import com.example.ecommerce_system.repo.UserRepo;
+import com.example.ecommerce_system.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,6 +38,9 @@ public class UserService {
 
     @Autowired
     private CartItemRepo cartItemRepo;
+
+    @Autowired
+    private BuyRepo orderRepo;
 
     @Autowired
     AuthenticationManager authManager;
@@ -207,4 +206,63 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepo.findAll();
     }
+
+    public BuyResponse buyProduct(String username, BuyRequest orderRequest) {
+        BuyResponse response = new BuyResponse();
+        Optional<Cart> optionalCart = cartRepo.findById(orderRequest.getCartId());
+
+        if (!optionalCart.isPresent()) {
+            response.setResponseStatus(ResponseStatus.FAILED);
+            response.setMessage("Cart not found.");
+            return response;
+        }
+
+        Cart cart = optionalCart.get();
+
+        if (cart.getUser() == null || !cart.getUser().getUsername().equals(username)) {
+            response.setResponseStatus(ResponseStatus.FAILED);
+            response.setMessage("You are not authorized to make this purchase.");
+            return response;
+        }
+
+        int totalAmount = 0;
+        List<Product> purchasedProducts = new ArrayList<>();
+
+        for (CartItem cartItem : cart.getCartItems()) {
+            Product product = cartItem.getProduct();
+
+            if (product.getStock() < cartItem.getQuantity()) {
+                response.setResponseStatus(ResponseStatus.FAILED);
+                response.setMessage("Insufficient stock for product: " + product.getProductName());
+                return response;
+            }
+
+            product.setStock(product.getStock() - cartItem.getQuantity());
+            productRepo.save(product);
+
+            totalAmount += product.getPrice() * cartItem.getQuantity();
+            purchasedProducts.add(product);
+        }
+
+        // Create and save the order
+        Buy order = new Buy();
+        order.setCart(cart);
+        order.setUser(cart.getUser());
+        order.setAmount(totalAmount);
+        orderRepo.save(order);
+
+        // Clear the cart after purchase
+        cart.getCartItems().clear();
+        cartRepo.save(cart);
+
+        // Populate the response
+        response.setProducts(purchasedProducts);
+        response.setTotalAmount(totalAmount);
+        response.setResponseStatus(ResponseStatus.SUCCESS);
+        response.setMessage("Purchase successful!");
+
+        return response;
+    }
+
+
 }
