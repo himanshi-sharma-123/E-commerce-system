@@ -182,9 +182,9 @@ public class UserService {
                 cartItemRepo.save(newCartItem);
             }
 
-            // Decrease product stock and save
-            product.setStock(product.getStock() - 1);
-            productRepo.save(product);
+            // Decrease product stock and save  // this logic is not needed while adding product to the cart
+//            product.setStock(product.getStock() - 1);
+//            productRepo.save(product);
 
             response.setId(cart.getId());
             response.setResponseStatus(ResponseStatus.SUCCESS);
